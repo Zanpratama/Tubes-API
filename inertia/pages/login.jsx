@@ -25,9 +25,13 @@ export default function Login() {
       }
 
       // Simpan token sementara
-      localStorage.setItem('token', data.token)
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('token', data.token)
+        window.location.href = '/dashboard' // redirect setelah login
+      }
 
       alert('Login berhasil!')
+      window.location.href = '/dashboard'
     } catch (err) {
       setErrors({ message: 'Server error' })
     }

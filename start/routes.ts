@@ -7,14 +7,14 @@ import { middleware } from '#start/kernel'
 
 router.on('/').renderInertia('login')
 router.on('/register').renderInertia('register')
-router.on('/dashboard').renderInertia('dashboard')
 
-router
-  .group(() => {
+router.group(() => {
   router.post('/login', [UsersController, 'login'])
   router.post('/register', [UsersController, 'register'])
-  })
-  .prefix('/auth')
+})
+.prefix('/auth')
+
+router.on('/dashboard').renderInertia('dashboard')
 
 router
   .group(() => {
