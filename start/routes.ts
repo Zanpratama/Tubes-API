@@ -2,16 +2,17 @@ import router from '@adonisjs/core/services/router'
 import AuthController from '#controllers/auth_controller'
 import ConsolesController from '#controllers/consoles_controller'
 import RentsController from '#controllers/rents_controller'
+import UsersController from '#controllers/users_controller'
 import { middleware } from '#start/kernel'
 
 router.on('/').renderInertia('login')
+router.on('/register').renderInertia('register')
 router.on('/dashboard').renderInertia('dashboard')
 
 router
   .group(() => {
-    router.post('/register', [AuthController, 'register'])
-    router.post('/login', [AuthController, 'login'])
-    router.get('/me', [AuthController, 'me']).use(middleware.auth())
+  router.post('/login', [UsersController, 'login'])
+  router.post('/register', [UsersController, 'register'])
   })
   .prefix('/auth')
 
