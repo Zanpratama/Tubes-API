@@ -1,14 +1,13 @@
 import { useState } from 'react'
-import { Link } from '@inertiajs/react'
 
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [errors, setErrors] = useState()
+  const [errors, setErrors] = useState(null)
 
   const handleLogin = async (e) => {
     e.preventDefault()
-    setErrors()
+    setErrors(null)
 
     try {
       const res = await fetch('http://localhost:3333/auth/login', {
@@ -20,17 +19,14 @@ export default function Login() {
       const data = await res.json()
 
       if (!res.ok) {
-        setErrors({ message: data.message || 'Login failed' })
+        setErrors({ message: data.message || 'Login gagal' })
         return
       }
 
-      // Simpan token sementara
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('token', data.token)
-        window.location.href = '/dashboard' // redirect setelah login
-      }
+      // Simpan token ke localStorage (CSR aman)
+      localStorage.setItem('token', data.token.token)
 
-      alert('Login berhasil!')
+      // Redirect ke dashboard
       window.location.href = '/dashboard'
     } catch (err) {
       setErrors({ message: 'Server error' })
@@ -74,13 +70,6 @@ export default function Login() {
             Login
           </button>
         </form>
-
-        <div style={styles.switchText}>
-          Don't have an account?
-          <Link href="/register" style={styles.link}>
-            Register
-          </Link>
-        </div>
       </div>
     </div>
   )
@@ -138,15 +127,5 @@ const styles = {
     padding: '10px',
     borderRadius: '10px',
     marginBottom: '10px',
-  },
-  switchText: {
-    textAlign: 'center',
-    marginTop: '20px',
-    fontSize: '14px',
-  },
-  link: {
-    color: '#ffb703',
-    fontWeight: 'bold',
-    marginLeft: '5px',
   },
 }
