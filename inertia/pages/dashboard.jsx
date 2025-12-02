@@ -111,181 +111,191 @@ export default function Dashboard() {
   }
 
   return (
-    <div style={styles.page}>
-      <div style={styles.cardLarge}>
-        {/* HEADER */}
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <h1 style={styles.title}>Dashboard</h1>
-          <button onClick={logout} style={styles.logoutBtn}>
-            Logout
-          </button>
-        </div>
+    <>
+      <style>
+        {`
+      input::placeholder {
+        color: white;
+        opacity: 1;
+      }
+    `}
+      </style>
 
-        {/* SUCCESS POPUP */}
-        {successMsg && <div style={styles.successBox}>{successMsg}</div>}
+      <div style={styles.page}>
+        <div style={styles.cardLarge}>
+          {/* HEADER */}
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <h1 style={styles.title}>Dashboard</h1>
+            <button onClick={logout} style={styles.logoutBtn}>
+              Logout
+            </button>
+          </div>
 
-        {/* ========== TABLES SECTION ========== */}
-        <div style={styles.section}>
-          <h2 style={styles.subtitle}>Console List</h2>
+          {/* SUCCESS POPUP */}
+          {successMsg && <div style={styles.successBox}>{successMsg}</div>}
 
-          <button style={styles.addBtn} onClick={() => setShowConsoleForm(!showConsoleForm)}>
-            {showConsoleForm ? 'Close Form' : 'Add Console'}
-          </button>
+          {/* ========== TABLES SECTION ========== */}
+          <div style={styles.section}>
+            <h2 style={styles.subtitle}>Console List</h2>
 
-          {/* FORM CONSOLE */}
-          {showConsoleForm && (
-            <div style={styles.form}>
-              <input
-                style={styles.input}
-                placeholder="Name"
-                value={consoleForm.name}
-                onChange={(e) => setConsoleForm({ ...consoleForm, name: e.target.value })}
-              />
-              <input
-                style={styles.input}
-                placeholder="Price / Hour"
-                type="number"
-                value={consoleForm.price_per_hour}
-                onChange={(e) => setConsoleForm({ ...consoleForm, price_per_hour: e.target.value })}
-              />
+            <button style={styles.addBtn} onClick={() => setShowConsoleForm(!showConsoleForm)}>
+              {showConsoleForm ? 'Close Form' : 'Add Console'}
+            </button>
 
-              <button style={styles.button} onClick={saveConsole}>
-                {consoleForm.id ? 'Update Console' : 'Create Console'}
-              </button>
-            </div>
-          )}
+            {/* FORM CONSOLE */}
+            {showConsoleForm && (
+              <div style={styles.form}>
+                <input
+                  style={styles.input}
+                  placeholder="Name"
+                  value={consoleForm.name}
+                  onChange={(e) => setConsoleForm({ ...consoleForm, name: e.target.value })}
+                />
+                <input
+                  style={styles.input}
+                  placeholder="Price / Hour"
+                  type="number"
+                  value={consoleForm.price_per_hour}
+                  onChange={(e) =>
+                    setConsoleForm({ ...consoleForm, price_per_hour: e.target.value })
+                  }
+                />
 
-          {/* TABLE CONSOLE */}
-          <table style={styles.table}>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Price/Hour</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {consoles.map((c) => (
-                <tr key={c.id}>
-                  <td>{c.id}</td>
-                  <td>{c.name}</td>
-                  <td>{c.pricePerHour}</td>
-                  <td>
-                    <button
-                      style={styles.smallBtn}
-                      onClick={() => {
-                        setConsoleForm({
-                          id: c.id,
-                          name: c.name,
-                          price_per_hour: c.pricePerHour,
-                        })
-                        setShowConsoleForm(true)
-                      }}
-                    >
-                      Edit
-                    </button>
-                    <button style={styles.deleteBtn} onClick={() => deleteConsole(c.id)}>
-                      Delete
-                    </button>
-                  </td>
+                <button style={styles.button} onClick={saveConsole}>
+                  {consoleForm.id ? 'Update Console' : 'Create Console'}
+                </button>
+              </div>
+            )}
+
+            {/* TABLE CONSOLE */}
+            <table style={styles.table}>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Price/Hour</th>
+                  <th>Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {consoles.map((c) => (
+                  <tr key={c.id}>
+                    <td>{c.id}</td>
+                    <td>{c.name}</td>
+                    <td>{c.pricePerHour}</td>
+                    <td>
+                      <button
+                        style={styles.smallBtn}
+                        onClick={() => {
+                          setConsoleForm({
+                            id: c.id,
+                            name: c.name,
+                            price_per_hour: c.pricePerHour,
+                          })
+                          setShowConsoleForm(true)
+                        }}
+                      >
+                        Edit
+                      </button>
+                      <button style={styles.deleteBtn} onClick={() => deleteConsole(c.id)}>
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-        {/* RENT TABLE */}
-        <div style={styles.section}>
-          <h2 style={styles.subtitle}>Rent List</h2>
+          {/* RENT TABLE */}
+          <div style={styles.section}>
+            <h2 style={styles.subtitle}>Rent List</h2>
 
-          <button style={styles.addBtn} onClick={() => setShowRentForm(!showRentForm)}>
-            {showRentForm ? 'Close Form' : 'Add Rent'}
-          </button>
+            <button style={styles.addBtn} onClick={() => setShowRentForm(!showRentForm)}>
+              {showRentForm ? 'Close Form' : 'Add Rent'}
+            </button>
 
-          {/* FORM RENT */}
-          {showRentForm && (
-            <div style={styles.form}>
-              <input
-                style={styles.input}
-                placeholder="User ID"
-                value={rentForm.user_id}
-                onChange={(e) => setRentForm({ ...rentForm, user_id: e.target.value })}
-              />
-              <input
-                style={styles.input}
-                placeholder="Console ID"
-                value={rentForm.console_id}
-                onChange={(e) => setRentForm({ ...rentForm, console_id: e.target.value })}
-              />
-              <input
-                style={styles.input}
-                type="datetime-local"
-                value={rentForm.rent_date}
-                onChange={(e) => setRentForm({ ...rentForm, rent_date: e.target.value })}
-              />
-              <input
-                style={styles.input}
-                placeholder="Hours"
-                type="number"
-                value={rentForm.hours}
-                onChange={(e) => setRentForm({ ...rentForm, hours: e.target.value })}
-              />
+            {/* FORM RENT */}
+            {showRentForm && (
+              <div style={styles.form}>
+                <input
+                  style={styles.input}
+                  placeholder="User ID"
+                  value={rentForm.user_id}
+                  onChange={(e) => setRentForm({ ...rentForm, user_id: e.target.value })}
+                />
+                <input
+                  style={styles.input}
+                  placeholder="Console ID"
+                  value={rentForm.console_id}
+                  onChange={(e) => setRentForm({ ...rentForm, console_id: e.target.value })}
+                />
+                <input
+                  style={styles.input}
+                  type="datetime-local"
+                  value={rentForm.rent_date}
+                  onChange={(e) => setRentForm({ ...rentForm, rent_date: e.target.value })}
+                />
+                <input
+                  style={styles.input}
+                  placeholder="Hours"
+                  type="number"
+                  value={rentForm.hours}
+                  onChange={(e) => setRentForm({ ...rentForm, hours: e.target.value })}
+                />
 
-              <button style={styles.button} onClick={saveRent}>
-                {rentForm.id ? 'Update Rent' : 'Create Rent'}
-              </button>
-            </div>
-          )}
+                <button style={styles.button} onClick={saveRent}>
+                  {rentForm.id ? 'Update Rent' : 'Create Rent'}
+                </button>
+              </div>
+            )}
 
-          {/* TABLE RENT */}
-          <table style={styles.table}>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>User</th>
-                <th>Console</th>
-                <th>Date</th>
-                <th>Hours</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rents.map((r) => (
-                <tr key={r.id}>
-                  <td>{r.id}</td>
-                  <td>{r.userId}</td>
-                  <td>{r.consoleId}</td>
-                  <td>{r.rentDate}</td>
-                  <td>{r.hours}</td>
-                  <td>
-                    <button
-                      style={styles.smallBtn}
-                      onClick={() => {
-                        setRentForm(r)
-                        setShowRentForm(true)
-                      }}
-                    >
-                      Edit
-                    </button>
-
-                    <button style={styles.deleteBtn} onClick={() => deleteRent(r.id)}>
-                      Delete
-                    </button>
-                  </td>
+            {/* TABLE RENT */}
+            <table style={styles.table}>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>User</th>
+                  <th>Console</th>
+                  <th>Date</th>
+                  <th>Hours</th>
+                  <th>Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {rents.map((r) => (
+                  <tr key={r.id}>
+                    <td>{r.id}</td>
+                    <td>{r.userId}</td>
+                    <td>{r.consoleId}</td>
+                    <td>{r.rentDate}</td>
+                    <td>{r.hours}</td>
+                    <td>
+                      <button
+                        style={styles.smallBtn}
+                        onClick={() => {
+                          setRentForm(r)
+                          setShowRentForm(true)
+                        }}
+                      >
+                        Edit
+                      </button>
+
+                      <button style={styles.deleteBtn} onClick={() => deleteRent(r.id)}>
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }
 
-/* ============================================================
-   STYLE — Sama persis dengan Login, tapi diperluas
-   ============================================================ */
 const styles = {
   page: {
     minHeight: '100vh',

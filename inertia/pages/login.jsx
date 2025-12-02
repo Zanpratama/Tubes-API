@@ -34,46 +34,60 @@ export default function Login() {
   }
 
   return (
-    <div style={styles.page}>
-      <div style={styles.card}>
-        <h1 style={styles.title}>Welcome Back</h1>
+    <>
+      <style>
+        {`
+        .white-placeholder::placeholder {
+          color: white;
+          opacity: 1;
+        }
+      `}
+      </style>
 
-        {errors && <div style={styles.errorBox}>• {errors.message}</div>}
+      <div style={styles.page}>
+        <div style={styles.card}>
+          <h1 style={styles.title}>Welcome Back</h1>
 
-        <form
-          onSubmit={handleLogin}
-          style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}
-        >
-          <div>
-            <label>Email</label>
-            <input
-              style={styles.input}
-              type="email"
-              placeholder="email@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
+          {errors && <div style={styles.errorBox}>• {errors.message}</div>}
 
-          <div>
-            <label>Password</label>
-            <input
-              style={styles.input}
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
+          <form
+            onSubmit={handleLogin}
+            style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}
+          >
+            <div>
+              <label>Email</label>
+              <input
+                className="white-placeholder"
+                style={styles.input}
+                type="email"
+                placeholder="email@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
 
-          <button style={styles.button} type="submit">
-            Login
-          </button>
-        </form>
+            <div>
+              <label>Password</label>
+              <input
+                className="white-placeholder"
+                style={styles.input}
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+
+            <button style={styles.button} type="submit">
+              Login
+            </button>
+          </form>
+        </div>
       </div>
-    </div>
+    </>
   )
-}
+};
+
 
 const styles = {
   page: {
@@ -95,6 +109,7 @@ const styles = {
     border: '1px solid rgba(255, 255, 255, 0.3)',
     boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
   },
+
   title: {
     fontSize: '32px',
     fontWeight: 'bold',
@@ -111,6 +126,7 @@ const styles = {
     marginTop: '5px',
     outline: 'none',
   },
+
   button: {
     width: '100%',
     padding: '12px',
