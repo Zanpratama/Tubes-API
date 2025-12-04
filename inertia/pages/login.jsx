@@ -81,6 +81,12 @@ export default function Login() {
             <button style={styles.button} type="submit">
               Login
             </button>
+            <p style={{ textAlign: 'center', marginTop: '10px' }}>
+              No account yet?{' '}
+              <a href="/register" style={styles.link}>
+                Register
+              </a>
+            </p>
           </form>
         </div>
       </div>
@@ -143,5 +149,10 @@ const styles = {
     padding: '10px',
     borderRadius: '10px',
     marginBottom: '10px',
+  },
+  link: {
+    color: '#ffb703',
+    fontWeight: 'bold',
+    marginLeft: '5px',
   },
 }
