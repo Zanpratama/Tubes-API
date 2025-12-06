@@ -1,0 +1,792 @@
+openapi: 3.0.0
+info:
+  title: Console Rental Management API
+  description: |
+    API untuk sistem manajemen penyewaan konsol game dengan fitur:
+    - Autentikasi JWT
+    - CRUD Konsol & Rental
+    - Konversi mata uang real-time (ExchangeRate API)
+    - Notifikasi Telegram otomatis saat rental dibuat
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@consolerental.com
+
+servers:
+  - url: http://localhost:3333
+    description: Development Server
+  - url: https://api.consolerental.com
+    description: Production Server
+
+tags:
+  - name: Authentication
+    description: Endpoint untuk registrasi dan login user
+  - name: Consoles
+    description: Manajemen data konsol game
+  - name: Rents
+    description: Manajemen penyewaan konsol (dengan notifikasi Telegram)
+  - name: Exchange
+    description: Konversi harga mata uang real-time
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Gunakan token yang didapat dari `/auth/login`.
+        Format: `Bearer {your_token_here}`
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          example: "john@example.com"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+
+    Console:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "PlayStation 5"
+        pricePerHour:
+          type: integer
+          description: Harga sewa per jam dalam IDR
+          example: 50000
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Rent:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        userId:
+          type: integer
+          example: 5
+        consoleId:
+          type: integer
+          example: 2
+        rentDate:
+          type: string
+          format: date-time
+          example: "2024-01-20T14:00:00Z"
+        hours:
+          type: integer
+          description: Durasi sewa dalam jam
+          example: 3
+        user:
+          $ref: '#/components/schemas/User'
+        console:
+          $ref: '#/components/schemas/Console'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ExchangeRate:
+      type: object
+      properties:
+        console:
+          type: string
+          example: "PlayStation 5"
+        price_per_hour_idr:
+          type: integer
+          example: 50000
+        target_currency:
+          type: string
+          example: "USD"
+        conversion_rate:
+          type: number
+          format: float
+          example: 0.000063
+        converted_price_per_hour:
+          type: number
+          format: float
+          example: 3.15
+
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Validation failed"
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              rule:
+                type: string
+              message:
+                type: string
+
+    SuccessResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Operation successful"
+
+security:
+  - bearerAuth: []
+
+paths:
+  # ==================== AUTHENTICATION ====================
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Registrasi user baru
+      description: Endpoint untuk mendaftarkan akun user baru ke sistem
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - password
+              properties:
+                name:
+                  type: string
+                  example: "John Doe"
+                  minLength: 3
+                email:
+                  type: string
+                  format: email
+                  example: "john@example.com"
+                password:
+                  type: string
+                  format: password
+                  minLength: 6
+                  example: "password123"
+      responses:
+        '201':
+          description: Registrasi berhasil
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User registered successfully"
+                  user:
+                    $ref: '#/components/schemas/User'
+        '400':
+          description: Email sudah terdaftar
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Email already exists"
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Login user
+      description: Endpoint untuk mendapatkan JWT token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "john@example.com"
+                password:
+                  type: string
+                  format: password
+                  example: "password123"
+      responses:
+        '200':
+          description: Login berhasil
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "login successful"
+                  token:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        example: "Bearer"
+                      token:
+                        type: string
+                        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        '400':
+          description: Email atau password salah
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Invalid email"
+
+  # ==================== CONSOLES ====================
+  /consoles:
+    get:
+      tags:
+        - Consoles
+      summary: Mendapatkan daftar semua konsol
+      description: Mengambil semua data konsol yang tersedia untuk disewa
+      responses:
+        '200':
+          description: Berhasil mengambil data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Console'
+        '401':
+          description: Unauthorized - Token tidak valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      tags:
+        - Consoles
+      summary: Tambah konsol baru
+      description: Menambahkan konsol baru ke database (Protected)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - price_per_hour
+              properties:
+                name:
+                  type: string
+                  example: "Xbox Series X"
+                price_per_hour:
+                  type: integer
+                  example: 45000
+                  description: Harga sewa per jam dalam IDR
+      responses:
+        '201':
+          description: Konsol berhasil ditambahkan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Console'
+        '400':
+          description: Validasi gagal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /consoles/{id}:
+    get:
+      tags:
+        - Consoles
+      summary: Detail konsol
+      description: Mendapatkan informasi detail konsol berdasarkan ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: ID konsol
+          example: 1
+      responses:
+        '200':
+          description: Data konsol ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Console'
+        '404':
+          description: Konsol tidak ditemukan
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Console not found"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      tags:
+        - Consoles
+      summary: Update data konsol
+      description: Mengupdate informasi konsol yang sudah ada
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "PlayStation 5 Slim"
+                price_per_hour:
+                  type: integer
+                  example: 55000
+      responses:
+        '200':
+          description: Update berhasil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Console'
+        '404':
+          description: Konsol tidak ditemukan
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Console not found"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - Consoles
+      summary: Hapus konsol
+      description: Menghapus konsol dari database
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '204':
+          description: Konsol berhasil dihapus
+        '404':
+          description: Konsol tidak ditemukan
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Console not found"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ==================== RENTS ====================
+  /rents:
+    get:
+      tags:
+        - Rents
+      summary: History rental
+      description: Mendapatkan semua data rental dengan relasi user dan console
+      responses:
+        '200':
+          description: Berhasil mengambil data rental
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Rent'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      tags:
+        - Rents
+      summary: Buat rental baru
+      description: |
+        Membuat data rental baru. 
+        **IMPORTANT**: Endpoint ini secara otomatis mengirim notifikasi ke Telegram Bot setelah rental berhasil dibuat.
+        Notifikasi berisi informasi user, console, durasi, dan tanggal rental.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - user_id
+                - console_id
+                - rent_date
+                - hours
+              properties:
+                user_id:
+                  type: integer
+                  example: 1
+                  description: ID user yang menyewa
+                console_id:
+                  type: integer
+                  example: 2
+                  description: ID konsol yang disewa
+                rent_date:
+                  type: string
+                  format: date-time
+                  example: "2024-01-25T15:00:00Z"
+                  description: Tanggal dan waktu mulai rental
+                hours:
+                  type: integer
+                  minimum: 1
+                  example: 3
+                  description: Durasi rental dalam jam
+      responses:
+        '201':
+          description: Rental berhasil dibuat dan notifikasi Telegram terkirim
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rent'
+        '400':
+          description: Validasi gagal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error (mungkin gagal kirim notifikasi Telegram)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Failed to create rent"
+                  error:
+                    type: string
+
+  /rents/{id}:
+    get:
+      tags:
+        - Rents
+      summary: Detail rental
+      description: Mendapatkan detail rental berdasarkan ID dengan relasi user dan console
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '200':
+          description: Data rental ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rent'
+        '404':
+          description: Rental tidak ditemukan
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Rent not found"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      tags:
+        - Rents
+      summary: Update rental
+      description: Mengupdate data rental yang sudah ada
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: integer
+                  example: 1
+                console_id:
+                  type: integer
+                  example: 3
+                rent_date:
+                  type: string
+                  format: date-time
+                  example: "2024-01-26T10:00:00Z"
+                hours:
+                  type: integer
+                  example: 5
+      responses:
+        '200':
+          description: Update berhasil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rent'
+        '404':
+          description: Rental tidak ditemukan
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Message:
+                    type: string
+                    example: "Rent not found"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - Rents
+      summary: Hapus rental
+      description: Menghapus data rental dari database
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '204':
+          description: Rental berhasil dihapus
+        '404':
+          description: Rental tidak ditemukan
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Message:
+                    type: string
+                    example: "Rent not found"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ==================== EXCHANGE RATE ====================
+  /auth/exchange:
+    get:
+      tags:
+        - Exchange
+      summary: Konversi mata uang
+      description: |
+        Mendapatkan nilai tukar mata uang real-time dari ExchangeRate-API.
+        Digunakan untuk konversi harga sewa dari IDR ke mata uang lain (USD, EUR, dll).
+      parameters:
+        - in: query
+          name: from
+          schema:
+            type: string
+            default: "IDR"
+          description: Kode mata uang asal
+          example: "IDR"
+        - in: query
+          name: to
+          schema:
+            type: string
+            default: "USD"
+          description: Kode mata uang tujuan
+          example: "USD"
+        - in: query
+          name: amount
+          schema:
+            type: number
+          description: Jumlah yang akan dikonversi (opsional)
+          example: 50000
+      responses:
+        '200':
+          description: Konversi berhasil
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  result:
+                    type: object
+                    properties:
+                      result:
+                        type: string
+                        example: "success"
+                      base_code:
+                        type: string
+                        example: "IDR"
+                      target_code:
+                        type: string
+                        example: "USD"
+                      conversion_rate:
+                        type: number
+                        format: float
+                        example: 0.000063
+        '500':
+          description: Error fetching exchange rate
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Error fetching exchange rate"
+
+  /auth/consoles/price-convert/{id}:
+    get:
+      tags:
+        - Exchange
+      summary: Konversi harga konsol
+      description: |
+        Mendapatkan harga sewa konsol dalam mata uang tertentu.
+        Endpoint ini menggabungkan data konsol dari database dengan rate konversi real-time.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: ID konsol
+          example: 1
+        - in: query
+          name: currency
+          schema:
+            type: string
+            default: "USD"
+          description: Mata uang tujuan konversi
+          example: "USD"
+      responses:
+        '200':
+          description: Konversi harga berhasil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExchangeRate'
+        '404':
+          description: Konsol tidak ditemukan
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Console not found"

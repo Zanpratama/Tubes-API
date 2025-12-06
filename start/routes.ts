@@ -9,7 +9,7 @@ import ConsolePriceController from '#controllers/consoleprices_controller'
 
 router.on('/').renderInertia('login')
 router.on('/register').renderInertia('register')
-
+router.on('/docs').render('swagger')
 
 router
   .group(() => {
