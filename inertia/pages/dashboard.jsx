@@ -125,10 +125,18 @@ export default function Dashboard() {
         <div style={styles.cardLarge}>
           {/* HEADER */}
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <h1 style={styles.title}>Dashboard</h1>
-            <button onClick={logout} style={styles.logoutBtn}>
-              Logout
-            </button>
+            <div>
+              <button
+                style={styles.exchangeBtn}
+                onClick={() => (window.location.href = '/exchange_pages')}
+              >
+                Exchange
+              </button>
+
+              <button onClick={logout} style={styles.logoutBtn}>
+                Logout
+              </button>
+            </div>
           </div>
 
           {/* SUCCESS POPUP */}
@@ -427,5 +435,16 @@ const styles = {
     wordWrap: 'break-word',
     textAlign: 'center',
     verticalAlign: 'middle',
+  },
+
+  exchangeBtn: {
+    background: '#ffb703',
+    color: '#3a0ca3',
+    padding: '10px 20px',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    border: 'none',
+    fontWeight: 'bold',
+    marginRight: '10px',
   },
 }
